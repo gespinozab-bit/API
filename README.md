@@ -160,3 +160,35 @@ Compila el proyecto con:
 ```bash
 npm run build
 ```
+
+## Fase expandir: Category
+
+La migración `20260919232628_expand_add_category_relation` implementa únicamente la fase **expandir** de la estrategia `Expandir → Migrar datos → Contraer`.
+
+```mermaid
+erDiagram
+    CATEGORY o|--o{ PRODUCT : "relación opcional"
+
+    CATEGORY {
+        int id PK
+        string name UK
+    }
+
+    PRODUCT {
+        int id PK
+        string sku UK
+        string categoryName
+        int categoryId FK "nullable"
+    }
+```
+
+Durante esta fase coexisten:
+
+```text
+categoryName: campo anterior, obligatorio y todavía activo
+categoryId: nueva relación opcional
+```
+
+`Category` incorpora un nombre único y una relación opcional con productos. La migración conserva los datos porque crea una tabla nueva y agrega una columna nullable; no elimina columnas, no modifica productos y no obliga a los registros existentes a tener una categoría relacionada.
+
+El backfill todavía no se ha realizado: `Category` permanece vacía y los productos existentes conservan `categoryId = null`. Los valores de `categoryName` se migrarán en una fase posterior antes de hacer obligatoria la relación o retirar el campo anterior.

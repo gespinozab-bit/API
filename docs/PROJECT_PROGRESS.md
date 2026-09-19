@@ -9,6 +9,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 1. Infraestructura y proyecto base — **TERMINADO**
 2. Modelo inicial Product, primera migración y seed — **TERMINADO**
 3. Recorrido completo de creación HTTP — **TERMINADO**
+4. Fase expandir: Category y relación opcional — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -67,6 +68,30 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - Creados: filtro HTTP global y estructura `src/products` para dominio, aplicación, puerto, infraestructura, presentación y pruebas.
 - Modificados: `src/main.ts`, `src/app.module.ts`, `package.json`, `package-lock.json`, `README.md` y este registro de progreso.
 
+## Estado del Bloque 4 — EXPANDIR
+
+**TERMINADO**
+
+- Se agregó `Category` y la relación opcional `Product.categoryId`, conservando `categoryName` obligatorio y activo.
+- Se creó la migración `20260919232628_expand_add_category_relation` mediante `--create-only`.
+- El SQL fue revisado antes de aplicarse: no contiene `DROP TABLE`, `DROP COLUMN`, `UPDATE` ni `DELETE`.
+- La migración crea `Category`, agrega `categoryId` nullable, crea los índices y agrega la FK con `ON DELETE RESTRICT` y `ON UPDATE CASCADE`.
+- La migración fue aplicada y queda cerrada e inmutable.
+- Antes de migrar existían 6 productos: IDs `1, 2, 3, 4, 17, 22`; SKU `FER-001, FER-002, ELE-001, PLM-001, FER-003, BLK4-PRE`.
+- Después de migrar permanecían los mismos 6 productos con idénticos ID, SKU, precio, stock y `categoryName`; todos tenían `categoryId = null`.
+- La tabla `Category` quedó creada y vacía; no se realizó backfill.
+- PostgreSQL rechazó un nombre de categoría duplicado, un `categoryId` inexistente y la eliminación de una categoría referenciada. Todas las pruebas fueron revertidas y no dejaron datos temporales.
+- El seed existente conservó los productos externos y no creó categorías ni asignó relaciones.
+- La prueba posterior creó `BLK4-POST` mediante HTTP 201 y confirmó `categoryId = null`; `/health` respondió HTTP 200.
+- Compilación exitosa y 13 pruebas automatizadas aprobadas.
+- Las etapas **Migrar datos** y **Contraer** permanecen pendientes.
+
+### Archivos del Bloque 4
+
+- Creado: `prisma/migrations/20260919232628_expand_add_category_relation/migration.sql`.
+- Modificados: `prisma/schema.prisma`, `README.md` y este registro de progreso.
+- Protegidos sin cambios: migración del Bloque 2, seed, DTO, controlador, servicio, repositorio, filtros y pruebas existentes.
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
@@ -74,3 +99,4 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-19: Punto de control local del Bloque 1 creado antes de iniciar la integración del dominio.
 - 2026-09-19: Migración `20260919205642_create_product_initial` revisada, aplicada y declarada inmutable; seed idempotente y restricciones PostgreSQL verificadas. Bloque 2 terminado.
 - 2026-09-19: `POST /products` verificado de extremo a extremo con los códigos 201, 409 y 400; manejo uniforme de errores, 13 pruebas automatizadas y migración anterior intacta. Bloque 3 terminado.
+- 2026-09-19: Etapa EXPANDIR completada con `Category` y `Product.categoryId` nullable; 6 productos preservados durante la migración, restricciones PostgreSQL verificadas y backfill pendiente. Bloque 4 terminado.
