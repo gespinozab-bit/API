@@ -81,3 +81,82 @@ Ejecuta el seed reproducible e idempotente con:
 ```bash
 npm run prisma:seed
 ```
+
+## Crear un producto
+
+`POST /products` valida y transforma la entrada antes de persistirla. `categoryName` continúa siendo texto porque la relación con `Category` se incorporará mediante migraciones posteriores.
+
+```http
+POST /products
+Content-Type: application/json
+
+{
+  "sku": "FER-003",
+  "name": "Taladro eléctrico",
+  "description": "Taladro de 500 W",
+  "price": 450.75,
+  "stock": 8,
+  "categoryName": "Herramientas"
+}
+```
+
+Una creación correcta responde `201 Created`:
+
+```json
+{
+  "id": 17,
+  "sku": "FER-003",
+  "name": "Taladro eléctrico",
+  "description": "Taladro de 500 W",
+  "price": "450.75",
+  "stock": 8,
+  "categoryName": "Herramientas",
+  "createdAt": "2026-09-19T23:17:49.133Z",
+  "updatedAt": "2026-09-19T23:17:49.133Z"
+}
+```
+
+Los errores utilizan una estructura uniforme. Por ejemplo, un SKU repetido responde `409` con `PRODUCT_SKU_CONFLICT`, y los datos inválidos responden `400` con `VALIDATION_ERROR`:
+
+```json
+{
+  "statusCode": 409,
+  "code": "PRODUCT_SKU_CONFLICT",
+  "message": "Ya existe un producto con el SKU FER-003",
+  "path": "/products",
+  "timestamp": "2026-09-19T23:17:49.221Z"
+}
+```
+
+## Recorrido de la solicitud
+
+```mermaid
+flowchart TD
+    A["POST /products"] --> B["ValidationPipe y DTO"]
+    B --> C["ProductsController"]
+    C --> D["CreateProductService"]
+    D --> E["ProductRepository"]
+    E --> F["PrismaProductRepository"]
+    F --> G["PostgreSQL"]
+```
+
+- El DTO transforma y valida la entrada.
+- El controlador delega la operación sin consultar la base de datos.
+- El servicio coordina el caso de uso y comprueba el SKU mediante el puerto.
+- El puerto desacopla la aplicación de Prisma.
+- El repositorio Prisma persiste, convierte el resultado y traduce errores conocidos.
+- El filtro global convierte errores de validación, aplicación e inesperados en respuestas HTTP seguras.
+
+## Pruebas
+
+Ejecuta todas las pruebas unitarias y e2e con:
+
+```bash
+npm test -- --runInBand
+```
+
+Compila el proyecto con:
+
+```bash
+npm run build
+```

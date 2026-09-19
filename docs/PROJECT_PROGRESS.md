@@ -8,6 +8,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 
 1. Infraestructura y proyecto base — **TERMINADO**
 2. Modelo inicial Product, primera migración y seed — **TERMINADO**
+3. Recorrido completo de creación HTTP — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -48,9 +49,28 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - PostgreSQL rechazó SKU duplicado, precio cero, stock negativo y `categoryName` nulo. Las transacciones de prueba fueron revertidas y el conteo final permaneció en 4.
 - La compilación, las pruebas automatizadas, el endpoint `/health` y las exclusiones de Git fueron verificados nuevamente.
 
+## Estado del Bloque 3
+
+**TERMINADO**
+
+- Se creó `POST /products` con DTO, controlador, caso de uso, puerto de persistencia y repositorio Prisma.
+- Se configuraron globalmente transformación, lista blanca y rechazo de propiedades desconocidas.
+- Se agregó manejo uniforme de `VALIDATION_ERROR`, `PRODUCT_SKU_CONFLICT` e `INTERNAL_ERROR`.
+- Se crearon pruebas unitarias del servicio y controlador, además de pruebas e2e HTTP con repositorio simulado.
+- La verificación manual utilizó el SKU `FER-003`: creación HTTP 201, duplicado HTTP 409 e entrada inválida HTTP 400.
+- `GET /health` continuó respondiendo HTTP 200.
+- El seed se ejecutó antes de la comprobación manual y conservó los cuatro productos mínimos.
+- No se modificó `schema.prisma`, el seed ni ningún archivo dentro de `prisma/migrations`.
+
+### Archivos del Bloque 3
+
+- Creados: filtro HTTP global y estructura `src/products` para dominio, aplicación, puerto, infraestructura, presentación y pruebas.
+- Modificados: `src/main.ts`, `src/app.module.ts`, `package.json`, `package-lock.json`, `README.md` y este registro de progreso.
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
 - 2026-09-19: Validación completa de dependencias, Prisma, PostgreSQL, compilación, pruebas, API, endpoint de salud y exclusiones de Git. Bloque 1 terminado.
 - 2026-09-19: Punto de control local del Bloque 1 creado antes de iniciar la integración del dominio.
 - 2026-09-19: Migración `20260919205642_create_product_initial` revisada, aplicada y declarada inmutable; seed idempotente y restricciones PostgreSQL verificadas. Bloque 2 terminado.
+- 2026-09-19: `POST /products` verificado de extremo a extremo con los códigos 201, 409 y 400; manejo uniforme de errores, 13 pruebas automatizadas y migración anterior intacta. Bloque 3 terminado.
