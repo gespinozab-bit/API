@@ -20,9 +20,7 @@ describe('ProductsController', () => {
     const execute = jest.fn().mockResolvedValue(product);
     const module = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [
-        { provide: CreateProductService, useValue: { execute } },
-      ],
+      providers: [{ provide: CreateProductService, useValue: { execute } }],
     }).compile();
     const controller = module.get(ProductsController);
     const dto: CreateProductDto = {

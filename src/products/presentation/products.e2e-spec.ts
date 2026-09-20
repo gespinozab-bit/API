@@ -1,6 +1,8 @@
 import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+// supertest publishes a CommonJS callable export.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import request = require('supertest');
 import { HttpExceptionFilter } from '../../common/http-exception.filter';
 import { CreateProductService } from '../application/create-product.service';
@@ -106,8 +108,23 @@ describe('POST /products (e2e)', () => {
       .expect(400);
   });
 
+  it('returns 400 for a price with more than two decimals', async () => {
+    await request(app.getHttpServer())
+      .post('/products')
+      .send({ ...validBody, sku: 'PRICE-DEC', price: 10.123 })
+      .expect(400);
+  });
+
+  it('returns 400 for decimal stock', async () => {
+    await request(app.getHttpServer())
+      .post('/products')
+      .send({ ...validBody, sku: 'STOCK-DEC', stock: 1.5 })
+      .expect(400);
+  });
+
   it('returns 400 when a required field is absent', async () => {
-    const { categoryName, ...withoutCategory } = validBody;
+    const withoutCategory: Partial<typeof validBody> = { ...validBody };
+    delete withoutCategory.categoryName;
     await request(app.getHttpServer())
       .post('/products')
       .send({ ...withoutCategory, sku: 'MISSING-001' })
@@ -130,6 +147,20 @@ describe('POST /products (e2e)', () => {
       code: 'INTERNAL_ERROR',
       message: 'Ocurrió un error interno',
     });
-    expect(JSON.stringify(response.body)).not.toContain('sensitive internal detail');
+    expect(JSON.stringify(response.body)).not.toContain(
+      'sensitive internal detail',
+    );
+  });
+
+  it('returns a uniform 404 response for an unknown route', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/missing-route')
+      .expect(404);
+    expect(response.body).toMatchObject({
+      statusCode: 404,
+      code: 'HTTP_ERROR',
+      path: '/missing-route',
+    });
+    expect(response.body.timestamp).toBeDefined();
   });
 });

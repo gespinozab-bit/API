@@ -11,7 +11,9 @@ import { ProductsModule } from './products/products.module';
       isGlobal: true,
       cache: true,
       validationSchema: Joi.object({
-        DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
+        DATABASE_URL: Joi.string()
+          .uri({ scheme: ['postgresql', 'postgres'] })
+          .required(),
         PORT: Joi.number().port().default(3000),
       }),
     }),

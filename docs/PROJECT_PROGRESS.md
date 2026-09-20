@@ -13,6 +13,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 5. Migración de datos y escritura dual — **TERMINADO**
 6. Fase contraer del esquema — **TERMINADO**
 7. Reconstrucción desde una base vacía — **TERMINADO**
+8. Verificación integral y criterios de aceptación — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -165,6 +166,21 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - Modificados: `.gitignore`, `package.json`, `README.md` y este registro.
 - Local ignorado: `.env.verify`.
 
+## Estado del Bloque 8 — VERIFICACIÓN INTEGRAL
+
+**TERMINADO**
+
+- La arquitectura conserva la separación DTO, controlador, servicio, puerto y adaptador Prisma; el filtro uniforme no expone detalles internos.
+- Se ampliaron las pruebas de validación, filtro y HTTP, y se agregó integración real protegida contra PostgreSQL temporal.
+- Resultado: 31 pruebas unitarias/e2e y 5 de integración aprobadas; 36 aprobadas, 0 fallidas.
+- Cobertura: statements 44.27%, branches 60.00%, functions 51.42% y lines 43.25%.
+- Compilación, ESLint sin corrección automática, Prettier en modo check y validación Prisma finalizaron correctamente.
+- La reconstrucción temporal aplicó las 4 migraciones desde una base vacía; dos seeds conservaron 4 productos, 3 categorías y cero invariantes incumplidas.
+- Se verificaron restricciones reales, rollback transaccional y la matriz HTTP 200/201/400/404/409.
+- El entorno temporal fue eliminado; la base principal permaneció saludable con 13 productos, 5 categorías y 0 relaciones nulas, y `/health` respondió 200.
+- `.env`, `.env.verify` y artefactos generados continúan ignorados. No se modificaron migraciones, esquema ni seed.
+- Evidencia completa: [ACCEPTANCE_EVIDENCE.md](ACCEPTANCE_EVIDENCE.md).
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
@@ -176,3 +192,4 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-20: Etapa MIGRAR DATOS completada con backfill versionado, cero relaciones nulas, escritura dual transaccional, seed idempotente y compatibilidad HTTP preservada. Bloque 5 terminado.
 - 2026-09-20: Etapa CONTRAER completada con `categoryId NOT NULL`, retiro seguro de `Product.categoryName`, persistencia basada sólo en la relación y contrato HTTP preservado. Estrategia completa y Bloque 6 terminado.
 - 2026-09-20: Historial completo reconstruido con `migrate deploy` sobre PostgreSQL temporal vacío; seed idempotente, restricciones y API temporal verificadas, limpieza segura y base principal intacta. Bloque 7 terminado.
+- 2026-09-20: Verificación integral completada con 36 pruebas aprobadas, cobertura registrada, restricciones PostgreSQL y respuestas HTTP comprobadas, reconstrucción aislada repetida y matriz de aceptación documentada. Bloque 8 terminado.

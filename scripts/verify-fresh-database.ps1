@@ -129,6 +129,9 @@ SELECT
     if ($LASTEXITCODE -ne 0) { throw 'La compilación falló.' }
     & npm.cmd test -- --runInBand
     if ($LASTEXITCODE -ne 0) { throw 'Las pruebas automatizadas fallaron.' }
+    $env:ALLOW_TEST_DATABASE = 'true'
+    & npm.cmd run test:integration
+    if ($LASTEXITCODE -ne 0) { throw 'Las pruebas de integración PostgreSQL fallaron.' }
 
     Write-Output "VERIFICATION_OK migrations=$migrationCount counts=$secondCounts invariants=$invariants"
     Write-Output "El entorno temporal permanece activo para las pruebas HTTP y debe limpiarse sólo con el proyecto $projectName."
