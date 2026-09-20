@@ -1,4 +1,4 @@
-import { Prisma, Product as PrismaProduct } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { ProductSkuConflictError } from '../application/errors/product-sku-conflict.error';
 import { PrismaProductRepository } from './prisma-product.repository';
@@ -12,12 +12,20 @@ describe('PrismaProductRepository', () => {
     categoryName: 'Categoría compartida',
   };
 
-  const storedProduct: PrismaProduct = {
+  const storedProduct = {
     id: 50,
-    ...data,
+    sku: data.sku,
+    name: data.name,
     description: null,
     price: new Prisma.Decimal('15.50'),
+    stock: data.stock,
     categoryId: 7,
+    category: {
+      id: 7,
+      name: data.categoryName,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    },
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -47,7 +55,15 @@ describe('PrismaProductRepository', () => {
       create: { name: data.categoryName },
     });
     expect(productCreate).toHaveBeenCalledWith({
-      data: { ...data, categoryName: data.categoryName, categoryId: 7 },
+      data: {
+        sku: data.sku,
+        name: data.name,
+        description: undefined,
+        price: data.price,
+        stock: data.stock,
+        categoryId: 7,
+      },
+      include: { category: true },
     });
   });
 

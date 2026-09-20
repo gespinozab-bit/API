@@ -11,6 +11,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 3. Recorrido completo de creación HTTP — **TERMINADO**
 4. Fase expandir: Category y relación opcional — **TERMINADO**
 5. Migración de datos y escritura dual — **TERMINADO**
+6. Fase contraer del esquema — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -116,6 +117,29 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - Modificados: repositorio Prisma de productos, seed, `README.md` y este registro.
 - Protegidos sin cambios: migraciones anteriores, `schema.prisma`, DTO, controlador, servicio, puerto y filtro HTTP.
 
+## Estado del Bloque 6 — CONTRAER
+
+**TERMINADO**
+
+- Verificación previa: 11 productos, 4 categorías, 0 relaciones nulas, 0 huérfanas, 0 discordantes, 0 nombres vacíos y 0 categorías duplicadas.
+- Se creó la migración `20260920060800_contract_product_category_relation`. Prisma no pudo confirmar interactivamente la advertencia destructiva en este entorno; el SQL estructural fue generado con `prisma migrate diff`, incorporado a una nueva migración y aplicado con `prisma migrate deploy`.
+- El SQL fue revisado antes de aplicarse y se ejecuta en una transacción: valida relaciones nulas y huérfanas, elimina el índice heredado, elimina únicamente `Product.categoryName` y establece `Product.categoryId NOT NULL`.
+- La eliminación de `categoryName` es intencional y segura porque sus valores estaban representados por `Category.name` antes de contraer.
+- Comparación posterior: permanecieron los mismos 11 productos y 4 categorías con idénticos ID, SKU, nombre, precio, stock, `categoryId` y nombre relacionado.
+- PostgreSQL confirmó que `categoryName` ya no existe, `categoryId` es `NOT NULL`, la FK conserva `ON DELETE RESTRICT / ON UPDATE CASCADE` y el índice `Product_categoryId_idx` permanece activo.
+- El repositorio dejó de escribir `Product.categoryName`; incluye `category` y mapea `Category.name` como `categoryName` en la respuesta pública.
+- El seed dejó de escribir la columna eliminada. Dos ejecuciones conservaron 11 productos, 4 categorías y 7 productos externos.
+- PostgreSQL rechazó un producto sin `categoryId` y la eliminación de una categoría utilizada.
+- Verificación HTTP: `PIN-001` creó `Pinturas`; `BLK6-HERR` reutilizó `Herramientas`; duplicados devolvieron HTTP 409 sin categorías huérfanas; una entrada inválida devolvió HTTP 400; `/health` devolvió HTTP 200.
+- Compilación exitosa y 15 pruebas automatizadas aprobadas.
+- La estrategia **Expandir → Migrar datos → Contraer** está completada.
+
+### Archivos del Bloque 6
+
+- Creado: `prisma/migrations/20260920060800_contract_product_category_relation/migration.sql`.
+- Modificados: `prisma/schema.prisma`, repositorio Prisma y su prueba, seed, `README.md` y este registro.
+- Protegidos sin cambios: migraciones anteriores, DTO, controlador, servicio, puerto y filtro HTTP.
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
@@ -125,3 +149,4 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-19: `POST /products` verificado de extremo a extremo con los códigos 201, 409 y 400; manejo uniforme de errores, 13 pruebas automatizadas y migración anterior intacta. Bloque 3 terminado.
 - 2026-09-19: Etapa EXPANDIR completada con `Category` y `Product.categoryId` nullable; 6 productos preservados durante la migración, restricciones PostgreSQL verificadas y backfill pendiente. Bloque 4 terminado.
 - 2026-09-20: Etapa MIGRAR DATOS completada con backfill versionado, cero relaciones nulas, escritura dual transaccional, seed idempotente y compatibilidad HTTP preservada. Bloque 5 terminado.
+- 2026-09-20: Etapa CONTRAER completada con `categoryId NOT NULL`, retiro seguro de `Product.categoryName`, persistencia basada sólo en la relación y contrato HTTP preservado. Estrategia completa y Bloque 6 terminado.

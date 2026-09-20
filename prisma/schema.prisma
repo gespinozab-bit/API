@@ -14,13 +14,11 @@ model Product {
   description  String?  @db.VarChar(500)
   price        Decimal  @db.Decimal(10, 2)
   stock        Int      @default(0)
-  categoryName String   @db.VarChar(80)
-  categoryId   Int?
-  category     Category? @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  categoryId   Int
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@index([categoryName])
   @@index([categoryId])
 }
 

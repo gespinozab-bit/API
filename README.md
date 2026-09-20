@@ -237,3 +237,55 @@ Después de desplegar previamente la expansión, el orden para un entorno no ori
 5. Contraer el esquema en una versión posterior.
 
 `prisma migrate dev` crea y aplica migraciones durante el desarrollo. `prisma migrate deploy` aplica migraciones ya versionadas en entornos desplegados. En producción no deben utilizarse `prisma migrate dev`, `prisma db push` ni `prisma migrate reset`.
+
+## Fase contraer: modelo relacional final
+
+La migración `20260920060800_contract_product_category_relation` completa la estrategia **Expandir → Migrar datos → Contraer**.
+
+```mermaid
+erDiagram
+    CATEGORY ||--o{ PRODUCT : clasifica
+
+    CATEGORY {
+        int id PK
+        string name UK
+    }
+
+    PRODUCT {
+        int id PK
+        string sku UK
+        int categoryId FK
+    }
+```
+
+`Product.categoryId` es ahora obligatorio y la columna heredada `Product.categoryName` fue eliminada. Esta eliminación es segura porque el backfill previo relacionó todos los productos y el nombre vive en `Category.name`.
+
+El contrato HTTP no cambió: `POST /products` continúa recibiendo `categoryName`. El repositorio crea o reutiliza la categoría, almacena únicamente `categoryId` en `Product`, incluye la relación Prisma y devuelve `category.name` como `categoryName` en la respuesta pública.
+
+Comprobaciones útiles:
+
+```sql
+SELECT column_name, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'Product'
+  AND column_name IN ('categoryId', 'categoryName');
+
+SELECT p."sku", p."categoryId", c."name"
+FROM "Product" p
+JOIN "Category" c ON c."id" = p."categoryId";
+```
+
+### Despliegue controlado de la contracción
+
+La contracción es incompatible con versiones antiguas que todavía escriban `Product.categoryName`. En un entorno no orientado al desarrollo:
+
+1. Confirmar que la versión con escritura dual está desplegada.
+2. Confirmar cero `categoryId` nulos.
+3. Crear un respaldo.
+4. Activar una ventana de mantenimiento o detener escrituras.
+5. Aplicar el historial con `npx prisma migrate deploy`.
+6. Desplegar la versión que usa únicamente la relación.
+7. Ejecutar pruebas de humo.
+8. Reactivar el tráfico.
+
+En producción no deben utilizarse `prisma migrate dev`, `prisma db push` ni `prisma migrate reset`.
