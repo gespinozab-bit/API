@@ -16,7 +16,21 @@ export class PrismaProductRepository implements ProductRepository {
 
   async create(data: CreateProductData): Promise<Product> {
     try {
-      const product = await this.prisma.product.create({ data });
+      const product = await this.prisma.$transaction(async (transaction) => {
+        const category = await transaction.category.upsert({
+          where: { name: data.categoryName },
+          update: {},
+          create: { name: data.categoryName },
+        });
+
+        return transaction.product.create({
+          data: {
+            ...data,
+            categoryName: data.categoryName,
+            categoryId: category.id,
+          },
+        });
+      });
       return this.toDomain(product);
     } catch (error: unknown) {
       if (

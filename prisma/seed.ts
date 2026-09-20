@@ -39,10 +39,18 @@ const products = [
 
 async function main(): Promise<void> {
   for (const product of products) {
-    await prisma.product.upsert({
-      where: { sku: product.sku },
-      update: product,
-      create: product,
+    await prisma.$transaction(async (transaction) => {
+      const category = await transaction.category.upsert({
+        where: { name: product.categoryName },
+        update: {},
+        create: { name: product.categoryName },
+      });
+
+      await transaction.product.upsert({
+        where: { sku: product.sku },
+        update: { ...product, categoryId: category.id },
+        create: { ...product, categoryId: category.id },
+      });
     });
   }
 

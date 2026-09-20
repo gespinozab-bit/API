@@ -10,6 +10,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 2. Modelo inicial Product, primera migración y seed — **TERMINADO**
 3. Recorrido completo de creación HTTP — **TERMINADO**
 4. Fase expandir: Category y relación opcional — **TERMINADO**
+5. Migración de datos y escritura dual — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -92,6 +93,29 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - Modificados: `prisma/schema.prisma`, `README.md` y este registro de progreso.
 - Protegidos sin cambios: migración del Bloque 2, seed, DTO, controlador, servicio, repositorio, filtros y pruebas existentes.
 
+## Estado del Bloque 5 — MIGRAR DATOS
+
+**TERMINADO**
+
+- Inventario previo: 8 productos, 0 categorías y 8 relaciones nulas; no existían nombres vacíos, nombres compuestos sólo por espacios ni relaciones discordantes.
+- Se creó la migración `20260920054829_backfill_product_categories` como migración vacía mediante Prisma y se agregó únicamente el SQL versionado de backfill.
+- El SQL fue revisado antes de aplicarse: crea categorías distintas con `ON CONFLICT DO NOTHING`, relaciona productos y aborta si queda algún `categoryId` nulo.
+- La migración no elimina tablas, columnas, productos ni `categoryName`, no cambia nulabilidad y queda cerrada e inmutable.
+- Comparación posterior: permanecieron los mismos 8 productos con idénticos ID, SKU, nombre, precio, stock y `categoryName`.
+- Se crearon 3 categorías: `Electricidad`, `Herramientas` y `Plomería`; quedaron 0 relaciones nulas, 0 inválidas, 0 discordantes y 0 nombres duplicados.
+- El repositorio Prisma ahora ejecuta el upsert de categoría y la creación del producto en una única transacción, conservando escritura dual de `categoryName` y `categoryId`.
+- El seed fue actualizado para crear o reutilizar categorías y mantener ambos campos. Dos ejecuciones consecutivas conservaron 8 productos, 3 categorías y 4 productos externos.
+- Verificación HTTP: `JAR-001` creó la categoría `Jardinería`; `BLK5-HERR` reutilizó `Herramientas`; un duplicado devolvió HTTP 409 y no dejó `Categoria Huerfana B5`; una entrada inválida devolvió HTTP 400; `/health` devolvió HTTP 200.
+- Una prueba directa del repositorio provocó un `ProductSkuConflictError` después del upsert de `Atomic Rollback B5`; la transacción revirtió y PostgreSQL confirmó 0 categorías con ese nombre.
+- Compilación exitosa y 15 pruebas automatizadas aprobadas.
+- La fase **Contraer** permanece pendiente; `categoryId` continúa nullable y `categoryName` continúa activo.
+
+### Archivos del Bloque 5
+
+- Creado: `prisma/migrations/20260920054829_backfill_product_categories/migration.sql` y prueba unitaria del repositorio Prisma.
+- Modificados: repositorio Prisma de productos, seed, `README.md` y este registro.
+- Protegidos sin cambios: migraciones anteriores, `schema.prisma`, DTO, controlador, servicio, puerto y filtro HTTP.
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
@@ -100,3 +124,4 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-19: Migración `20260919205642_create_product_initial` revisada, aplicada y declarada inmutable; seed idempotente y restricciones PostgreSQL verificadas. Bloque 2 terminado.
 - 2026-09-19: `POST /products` verificado de extremo a extremo con los códigos 201, 409 y 400; manejo uniforme de errores, 13 pruebas automatizadas y migración anterior intacta. Bloque 3 terminado.
 - 2026-09-19: Etapa EXPANDIR completada con `Category` y `Product.categoryId` nullable; 6 productos preservados durante la migración, restricciones PostgreSQL verificadas y backfill pendiente. Bloque 4 terminado.
+- 2026-09-20: Etapa MIGRAR DATOS completada con backfill versionado, cero relaciones nulas, escritura dual transaccional, seed idempotente y compatibilidad HTTP preservada. Bloque 5 terminado.

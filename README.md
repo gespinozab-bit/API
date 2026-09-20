@@ -191,4 +191,49 @@ categoryId: nueva relación opcional
 
 `Category` incorpora un nombre único y una relación opcional con productos. La migración conserva los datos porque crea una tabla nueva y agrega una columna nullable; no elimina columnas, no modifica productos y no obliga a los registros existentes a tener una categoría relacionada.
 
-El backfill todavía no se ha realizado: `Category` permanece vacía y los productos existentes conservan `categoryId = null`. Los valores de `categoryName` se migrarán en una fase posterior antes de hacer obligatoria la relación o retirar el campo anterior.
+Al finalizar inicialmente la fase expandir, `Category` permanecía vacía y los productos conservaban `categoryId = null`. La fase siguiente realizó el backfill antes de hacer obligatoria la relación o retirar el campo anterior.
+
+## Fase migrar datos y escritura dual
+
+La migración `20260920054829_backfill_product_categories` completa la fase **Migrar datos** sin contraer todavía el esquema. Su SQL:
+
+- crea una categoría por cada `TRIM(categoryName)` distinto y no vacío;
+- reutiliza categorías existentes mediante `ON CONFLICT DO NOTHING`;
+- asigna el `categoryId` correspondiente a productos todavía no relacionados;
+- aborta si algún producto queda con `categoryId = null`.
+
+`categoryName` continúa presente y la relación sigue siendo nullable a nivel de esquema para mantener compatibilidad durante la transición.
+
+Las nuevas escrituras mantienen ambos campos sincronizados:
+
+```mermaid
+flowchart LR
+    A["POST /products"] --> B["categoryName validado"]
+    B --> C["Transacción Prisma"]
+    C --> D["Upsert Category"]
+    C --> E["Create Product"]
+    E --> F["categoryName + categoryId"]
+```
+
+El `upsert` de la categoría y la creación del producto ocurren en una sola transacción. Si la creación falla, la categoría tampoco queda persistida. El seed utiliza el mismo principio: crea o reutiliza categorías, conserva `categoryName`, asigna `categoryId` y actualiza productos mediante `upsert` por SKU sin borrar registros adicionales.
+
+Para verificar el estado después del backfill:
+
+```sql
+SELECT COUNT(*) FROM "Product" WHERE "categoryId" IS NULL;
+SELECT p."sku", p."categoryName", c."name"
+FROM "Product" p
+JOIN "Category" c ON c."id" = p."categoryId";
+```
+
+### Despliegue seguro
+
+Después de desplegar previamente la expansión, el orden para un entorno no orientado al desarrollo es:
+
+1. Desplegar una versión compatible con escritura dual.
+2. Aplicar el backfill con `npx prisma migrate deploy`.
+3. Confirmar que no existan productos con `categoryId = null`.
+4. Mantener temporalmente `categoryName` y `categoryId`.
+5. Contraer el esquema en una versión posterior.
+
+`prisma migrate dev` crea y aplica migraciones durante el desarrollo. `prisma migrate deploy` aplica migraciones ya versionadas en entornos desplegados. En producción no deben utilizarse `prisma migrate dev`, `prisma db push` ni `prisma migrate reset`.
