@@ -12,6 +12,7 @@ TypeScript, NestJS, PostgreSQL, Prisma ORM, Docker Compose, Joi y Jest.
 4. Fase expandir: Category y relación opcional — **TERMINADO**
 5. Migración de datos y escritura dual — **TERMINADO**
 6. Fase contraer del esquema — **TERMINADO**
+7. Reconstrucción desde una base vacía — **TERMINADO**
 
 ## Estado del Bloque 1
 
@@ -140,6 +141,30 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - Modificados: `prisma/schema.prisma`, repositorio Prisma y su prueba, seed, `README.md` y este registro.
 - Protegidos sin cambios: migraciones anteriores, DTO, controlador, servicio, puerto y filtro HTTP.
 
+## Estado del Bloque 7 — RECONSTRUCCIÓN
+
+**TERMINADO**
+
+- Se verificó el Bloque 6 con árbol limpio, cuatro migraciones aplicadas, compilación exitosa, 15 pruebas aprobadas, PostgreSQL principal saludable y `/health` HTTP 200.
+- Entorno aislado: proyecto `inventory-history-verification`, contenedor `inventory-history-verification-postgres`, PostgreSQL en puerto host 5434, base `inventory_verification`, usuario diferente y sin volumen declarado.
+- La base temporal inició con 0 tablas; no existían `Product`, `Category` ni `_prisma_migrations`.
+- `prisma migrate deploy` aplicó en orden las cuatro migraciones: `20260919205642_create_product_initial`, `20260919232628_expand_add_category_relation`, `20260920054829_backfill_product_categories` y `20260920060800_contract_product_category_relation`.
+- El esquema reconstruido contiene `Product`, `Category` y `_prisma_migrations`; `categoryId` es `NOT NULL`, `categoryName` no existe, y se conservaron PK, unicidad, checks, FK, índice, `ON DELETE RESTRICT` y `ON UPDATE CASCADE`.
+- Primera ejecución del seed: 4 productos, 3 categorías, 0 relaciones nulas, 0 SKU duplicados y 0 categorías duplicadas.
+- Segunda ejecución del seed: los mismos 4 productos y 3 categorías, sin duplicados ni relaciones nulas.
+- PostgreSQL temporal rechazó SKU duplicado, categoría duplicada, producto sin categoría, FK inexistente, precio cero, stock negativo y eliminación de categoría utilizada. Las transacciones fueron revertidas.
+- API temporal en puerto 3001: `/health` HTTP 200, creación `VERIFY-HTTP-001` HTTP 201 con precio `42.75` y categoría relacionada, repetición HTTP 409 y entrada inválida HTTP 400.
+- La automatización ejecutó además compilación y 15 pruebas con resultado exitoso.
+- La limpieza eliminó únicamente el contenedor y red del proyecto temporal, sin `down -v` y sin tocar el volumen principal.
+- Después de limpiar, la base principal continuó saludable con 13 productos, 5 categorías y 0 relaciones nulas; `/health` principal respondió HTTP 200.
+- Ninguna migración, esquema, seed, controlador, servicio, repositorio, DTO, filtro o prueba funcional fue modificada.
+
+### Archivos del Bloque 7
+
+- Creados: `compose.verify.yaml`, `.env.verify.example` y `scripts/verify-fresh-database.ps1`.
+- Modificados: `.gitignore`, `package.json`, `README.md` y este registro.
+- Local ignorado: `.env.verify`.
+
 ## Registro cronológico
 
 - 2026-09-19: Inicio del Bloque 1 y creación de la estructura base.
@@ -150,3 +175,4 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-19: Etapa EXPANDIR completada con `Category` y `Product.categoryId` nullable; 6 productos preservados durante la migración, restricciones PostgreSQL verificadas y backfill pendiente. Bloque 4 terminado.
 - 2026-09-20: Etapa MIGRAR DATOS completada con backfill versionado, cero relaciones nulas, escritura dual transaccional, seed idempotente y compatibilidad HTTP preservada. Bloque 5 terminado.
 - 2026-09-20: Etapa CONTRAER completada con `categoryId NOT NULL`, retiro seguro de `Product.categoryName`, persistencia basada sólo en la relación y contrato HTTP preservado. Estrategia completa y Bloque 6 terminado.
+- 2026-09-20: Historial completo reconstruido con `migrate deploy` sobre PostgreSQL temporal vacío; seed idempotente, restricciones y API temporal verificadas, limpieza segura y base principal intacta. Bloque 7 terminado.

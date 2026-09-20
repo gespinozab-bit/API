@@ -289,3 +289,56 @@ La contracción es incompatible con versiones antiguas que todavía escriban `Pr
 8. Reactivar el tráfico.
 
 En producción no deben utilizarse `prisma migrate dev`, `prisma db push` ni `prisma migrate reset`.
+
+## Reconstrucción desde una base vacía
+
+El historial completo puede reconstruir el esquema final en una instancia PostgreSQL nueva sin modificar la base principal.
+
+### Desarrollo
+
+Durante el desarrollo, `prisma migrate dev` permite crear y probar migraciones nuevas:
+
+```bash
+npm run prisma:migrate
+```
+
+Este comando es interactivo y no debe utilizarse en producción.
+
+### Despliegue o reconstrucción
+
+En entornos no orientados al desarrollo se utiliza:
+
+```bash
+npx prisma migrate deploy
+```
+
+`migrate deploy` no genera migraciones ni solicita decisiones interactivas; aplica las migraciones pendientes que ya están versionadas.
+
+La verificación automatizada requiere Docker, Node.js, npm, PowerShell y un archivo local `.env.verify` creado a partir de `.env.verify.example`. El archivo local está ignorado por Git.
+
+Ejecuta:
+
+```powershell
+Copy-Item .env.verify.example .env.verify
+npm run verify:fresh-db
+```
+
+El script:
+
+- levanta PostgreSQL temporal mediante `compose.verify.yaml` en el proyecto `inventory-history-verification`;
+- exige que la base empiece sin tablas;
+- configura `DATABASE_URL` sólo para su proceso;
+- ejecuta `prisma migrate deploy` y `prisma migrate status`;
+- ejecuta el seed dos veces y compara conteos;
+- comprueba relaciones, duplicados, compilación y pruebas;
+- no imprime secretos, no modifica `.env` y no toca el volumen principal.
+
+El script deja la instancia temporal activa para comprobaciones HTTP manuales en el puerto 3001. Para limpiarla de forma segura:
+
+```powershell
+docker compose --env-file .env.verify -f compose.verify.yaml -p inventory-history-verification down
+```
+
+No uses `-v` contra el proyecto principal. La alternativa manual utiliza los mismos archivos: levantar el proyecto temporal, confirmar cero tablas, definir `DATABASE_URL` sólo en el proceso, ejecutar `npx prisma migrate deploy`, ejecutar dos veces `npm run prisma:seed`, probar la API en otro puerto y limpiar exclusivamente `inventory-history-verification`.
+
+Nunca utilices `prisma db push` o `prisma migrate reset` para reconstruir o desplegar este proyecto.

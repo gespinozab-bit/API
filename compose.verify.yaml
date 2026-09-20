@@ -1,0 +1,17 @@
+services:
+  postgres_verify:
+    image: postgres:17-alpine
+    container_name: inventory-history-verification-postgres
+    restart: "no"
+    environment:
+      POSTGRES_USER: ${VERIFY_DB_USER}
+      POSTGRES_PASSWORD: ${VERIFY_DB_PASSWORD}
+      POSTGRES_DB: ${VERIFY_DB_NAME}
+    ports:
+      - "${VERIFY_DB_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s

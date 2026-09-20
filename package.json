@@ -17,7 +17,8 @@
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:status": "prisma migrate status",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "verify:fresh-db": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-fresh-database.ps1"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.5",
