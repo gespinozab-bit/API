@@ -19,7 +19,7 @@ describe('Registro de productos: reglas de negocio sin infraestructura', () => {
     updatedAt: date,
   };
   const input: CreateProductData = {
-    sku: 'FER-002',
+    sku: 'FER-005',
     name: 'Taladro',
     price: 25.5,
     stock: 8,
@@ -27,7 +27,7 @@ describe('Registro de productos: reglas de negocio sin infraestructura', () => {
   };
   const product: Product = {
     id: 42,
-    sku: 'FER-002',
+    sku: 'FER-005',
     name: 'Taladro',
     description: null,
     price: '25.50',
@@ -74,18 +74,18 @@ describe('Registro de productos: reglas de negocio sin infraestructura', () => {
 
   it('crea el producto con categoría existente y normaliza SKU y nombre', async () => {
     // Arrange
-    const request = { ...input, sku: ' fer-002 ', name: ' Taladro ' };
+    const request = { ...input, sku: ' fer-005 ', name: ' Taladro ' };
 
     // Act
     const result = await service.execute(request);
 
     // Assert
     expect(result).toEqual(product);
-    expect(persistence.products.findBySku).toHaveBeenCalledWith('FER-002');
+    expect(persistence.products.findBySku).toHaveBeenCalledWith('FER-005');
     expect(persistence.categories.findById).toHaveBeenCalledWith(7);
     expect(persistence.products.create).toHaveBeenCalledExactlyOnceWith(input);
     expect(persistence.categories.create).not.toHaveBeenCalled();
-    expect(request.sku).toBe(' fer-002 ');
+    expect(request.sku).toBe(' fer-005 ');
   });
 
   it('resuelve una categoría existente por nombre sin crear otra categoría', async () => {
@@ -240,7 +240,7 @@ describe('Registro de productos: reglas de negocio sin infraestructura', () => {
   it('rechaza un SKU duplicado después de normalizarlo sin guardar otro producto', async () => {
     // Arrange
     persistence.products.findBySku.mockResolvedValue(product);
-    const request = { ...input, sku: ' fer-002 ' };
+    const request = { ...input, sku: ' fer-005 ' };
 
     // Act
     const result = service.execute(request);
@@ -249,9 +249,9 @@ describe('Registro de productos: reglas de negocio sin infraestructura', () => {
     await expect(result).rejects.toBeInstanceOf(ProductSkuConflictError);
     await expect(result).rejects.toMatchObject({
       name: 'ProductSkuConflictError',
-      message: 'Ya existe un producto con el SKU FER-002',
+      message: 'Ya existe un producto con el SKU FER-005',
     });
-    expect(persistence.products.findBySku).toHaveBeenCalledWith('FER-002');
+    expect(persistence.products.findBySku).toHaveBeenCalledWith('FER-005');
     expect(persistence.products.create).not.toHaveBeenCalled();
     expect(persistence.categories.create).not.toHaveBeenCalled();
   });
