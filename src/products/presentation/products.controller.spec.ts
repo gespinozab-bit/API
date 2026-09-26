@@ -3,11 +3,13 @@ import { CreateProductService } from '../application/create-product.service';
 import { Product } from '../domain/product';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductsController } from './products.controller';
+import { QueryProductsService } from '../application/query-products.service';
 
 describe('ProductsController', () => {
   it('delegates product creation to the application service', async () => {
     const product: Product = {
       id: 1,
+      categoryId: 7,
       sku: 'TST-001',
       name: 'Producto',
       description: null,
@@ -20,7 +22,10 @@ describe('ProductsController', () => {
     const execute = jest.fn().mockResolvedValue(product);
     const module = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [{ provide: CreateProductService, useValue: { execute } }],
+      providers: [
+        { provide: CreateProductService, useValue: { execute } },
+        { provide: QueryProductsService, useValue: {} },
+      ],
     }).compile();
     const controller = module.get(ProductsController);
     const dto: CreateProductDto = {

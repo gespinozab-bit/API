@@ -30,17 +30,10 @@ describe('PrismaProductRepository', () => {
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
 
-  it('upserts the category and creates the product in one transaction', async () => {
-    const categoryUpsert = jest.fn().mockResolvedValue({ id: 7 });
+  it('connects an existing category when creating the product', async () => {
     const productCreate = jest.fn().mockResolvedValue(storedProduct);
-    const transaction = jest.fn(async (operation) =>
-      operation({
-        category: { upsert: categoryUpsert },
-        product: { create: productCreate },
-      }),
-    );
     const repository = new PrismaProductRepository({
-      $transaction: transaction,
+      product: { create: productCreate },
     } as unknown as PrismaService);
 
     await expect(repository.create(data)).resolves.toMatchObject({
@@ -48,12 +41,7 @@ describe('PrismaProductRepository', () => {
       price: '15.50',
       categoryName: data.categoryName,
     });
-    expect(transaction).toHaveBeenCalledTimes(1);
-    expect(categoryUpsert).toHaveBeenCalledWith({
-      where: { name: data.categoryName },
-      update: {},
-      create: { name: data.categoryName },
-    });
+    expect(productCreate).toHaveBeenCalledTimes(1);
     expect(productCreate).toHaveBeenCalledWith({
       data: {
         sku: data.sku,
@@ -61,25 +49,25 @@ describe('PrismaProductRepository', () => {
         description: undefined,
         price: data.price,
         stock: data.stock,
-        categoryId: 7,
+        category: { connect: { name: data.categoryName } },
       },
       include: { category: true },
     });
   });
 
-  it('translates a unique SKU failure and lets the transaction roll back', async () => {
+  it('translates a unique SKU failure', async () => {
     const prismaError = new Prisma.PrismaClientKnownRequestError(
       'Unique constraint failed',
       { code: 'P2002', clientVersion: '6.19.3' },
     );
-    const transaction = jest.fn().mockRejectedValue(prismaError);
+    const productCreate = jest.fn().mockRejectedValue(prismaError);
     const repository = new PrismaProductRepository({
-      $transaction: transaction,
+      product: { create: productCreate },
     } as unknown as PrismaService);
 
     await expect(repository.create(data)).rejects.toBeInstanceOf(
       ProductSkuConflictError,
     );
-    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(productCreate).toHaveBeenCalledTimes(1);
   });
 });

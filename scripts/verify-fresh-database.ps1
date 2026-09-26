@@ -99,9 +99,14 @@ try {
     & npx.cmd prisma migrate status
     if ($LASTEXITCODE -ne 0) { throw 'prisma migrate status falló.' }
 
-    $migrationCount = Invoke-VerificationSql 'SELECT COUNT(*) FROM "_prisma_migrations" WHERE finished_at IS NOT NULL;' $verificationEnvironment
-    if ($migrationCount -ne '4') {
-        throw "Se esperaban 4 migraciones aplicadas y se encontraron $migrationCount."
+    $expectedMigrations = @(Get-ChildItem -LiteralPath 'prisma/migrations' -Directory |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'migration.sql') } |
+        Select-Object -ExpandProperty Name | Sort-Object)
+    $appliedMigrationNames = Invoke-VerificationSql 'SELECT migration_name FROM "_prisma_migrations" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL ORDER BY migration_name;' $verificationEnvironment
+    $appliedMigrations = @($appliedMigrationNames -split '\r?\n' | Where-Object { $_ })
+    $migrationCount = $appliedMigrations.Count
+    if (($expectedMigrations -join ',') -cne ($appliedMigrations -join ',')) {
+        throw 'El historial aplicado no coincide con los archivos de migración del proyecto.'
     }
 
     & npm.cmd run prisma:seed
@@ -127,10 +132,10 @@ SELECT
 
     & npm.cmd run build
     if ($LASTEXITCODE -ne 0) { throw 'La compilación falló.' }
-    & npm.cmd test -- --runInBand
+    & npm.cmd run test:legacy -- --runInBand
     if ($LASTEXITCODE -ne 0) { throw 'Las pruebas automatizadas fallaron.' }
     $env:ALLOW_TEST_DATABASE = 'true'
-    & npm.cmd run test:integration
+    & npm.cmd run test:integration:legacy
     if ($LASTEXITCODE -ne 0) { throw 'Las pruebas de integración PostgreSQL fallaron.' }
 
     Write-Output "VERIFICATION_OK migrations=$migrationCount counts=$secondCounts invariants=$invariants"

@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsInt,
   IsNotEmpty,
@@ -6,13 +6,18 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Max,
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value;
+
+const numeric = ({ value }: { value: unknown }): unknown =>
+  typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
 
 export class CreateProductDto {
   @Transform(({ value }: { value: unknown }) =>
@@ -35,19 +40,35 @@ export class CreateProductDto {
   @MaxLength(500)
   description?: string;
 
-  @Type(() => Number)
+  @Transform(numeric)
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
+  @Max(99999999.99)
   price!: number;
 
-  @Type(() => Number)
+  @Transform(numeric)
   @IsInt()
   @Min(0)
+  @Max(1000)
   stock!: number;
 
+  @ValidateIf(
+    (dto: CreateProductDto) =>
+      dto.categoryName !== undefined || dto.categoryId === undefined,
+  )
   @Transform(trim)
   @IsString()
   @IsNotEmpty()
   @MaxLength(80)
-  categoryName!: string;
+  categoryName?: string;
+
+  @ValidateIf(
+    (dto: CreateProductDto) =>
+      dto.categoryId !== undefined || dto.categoryName === undefined,
+  )
+  @Transform(numeric)
+  @IsInt()
+  @Min(1)
+  @Max(2147483647)
+  categoryId?: number;
 }

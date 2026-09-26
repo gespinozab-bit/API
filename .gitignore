@@ -9,3 +9,19 @@ npm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Credenciales y artefactos sensibles locales
+.npmrc
+.netrc
+credentials.json
+credentials.*.json
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+backups/
+*.dump
+*.backup
+*.log
+*.tsbuildinfo

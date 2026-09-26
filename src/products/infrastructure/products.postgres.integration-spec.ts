@@ -1,4 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { ProductSkuConflictError } from '../application/errors/product-sku-conflict.error';
 import { PrismaProductRepository } from './prisma-product.repository';
@@ -38,6 +40,7 @@ describe('Products PostgreSQL integration', () => {
     await prisma.category.deleteMany({
       where: { name: { startsWith: 'B8 ' } },
     });
+    await prisma.category.create({ data: { name: categoryName } });
   });
 
   afterAll(async () => {
@@ -53,10 +56,11 @@ describe('Products PostgreSQL integration', () => {
   });
 
   it('has the complete migration history and required relation', async () => {
-    const applied = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(*)::bigint AS count
+    const applied = await prisma.$queryRaw<Array<{ migration_name: string }>>`
+      SELECT migration_name
       FROM "_prisma_migrations"
-      WHERE finished_at IS NOT NULL
+      WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL
+      ORDER BY migration_name
     `;
     const columns = await prisma.$queryRaw<
       Array<{ column_name: string; is_nullable: string }>
@@ -67,11 +71,17 @@ describe('Products PostgreSQL integration', () => {
         AND table_name = 'Product'
         AND column_name IN ('categoryId', 'categoryName')
     `;
-    expect(Number(applied[0].count)).toBe(4);
+    const migrationsPath = join(process.cwd(), 'prisma', 'migrations');
+    const expected = readdirSync(migrationsPath)
+      .filter((name) => existsSync(join(migrationsPath, name, 'migration.sql')))
+      .sort();
+    expect(applied.map((migration) => migration.migration_name)).toEqual(
+      expected,
+    );
     expect(columns).toEqual([{ column_name: 'categoryId', is_nullable: 'NO' }]);
   });
 
-  it('creates and reuses a category inside transactions', async () => {
+  it('creates products linked to an existing category', async () => {
     const first = await repository.create({
       sku: skus[0],
       name: 'Integration one',
@@ -99,20 +109,19 @@ describe('Products PostgreSQL integration', () => {
     ).toBe(true);
   });
 
-  it('rolls back a newly upserted category when product creation fails', async () => {
-    const rollbackCategory = 'B8 Rollback Category';
+  it('preserves the category when duplicate product creation fails', async () => {
     await expect(
       repository.create({
         sku: skus[0],
         name: 'Duplicate integration product',
         price: 15,
         stock: 1,
-        categoryName: rollbackCategory,
+        categoryName,
       }),
     ).rejects.toBeInstanceOf(ProductSkuConflictError);
     await expect(
-      prisma.category.count({ where: { name: rollbackCategory } }),
-    ).resolves.toBe(0);
+      prisma.category.count({ where: { name: categoryName } }),
+    ).resolves.toBe(1);
   });
 
   it('enforces PostgreSQL uniqueness, checks, NOT NULL, FK and RESTRICT', async () => {

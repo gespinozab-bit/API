@@ -1,65 +1,6 @@
 # Inventario Migraciones
 
-## Estado actual
-
-La API de inventario registra categorías y productos y permite consultarlos,
-aplicando unicidad de SKU y categoría, precio positivo, stock entre 0 y 1000 y
-relaciones obligatorias con categorías existentes. El proyecto usa NestJS 11,
-TypeScript, Prisma 6, PostgreSQL 17, Docker Compose, Vitest y Testcontainers.
-
-### Requisitos y configuración
-
-Se requiere Node.js 22 LTS, npm y Docker Desktop activo con soporte para
-contenedores Linux. Copia `.env.example` a `.env` y reemplaza únicamente los
-valores locales de muestra, manteniendo `DATABASE_URL` sincronizada con el
-usuario, contraseña, base y puerto de Compose (5433). Nunca publiques `.env` ni
-contraseñas reales.
-
-```powershell
-npm ci
-Copy-Item .env.example .env
-docker compose up -d postgres
-npm run prisma:validate
-npm run prisma:generate
-npx prisma migrate deploy
-npm run start:dev
-```
-
-Las migraciones versionadas se aplican con `prisma migrate deploy`; no uses
-`prisma migrate reset` ni `prisma db push`. La API expone `POST /categories`,
-`GET /categories`, `POST /products`, `GET /products`, `GET /products/:id` y
-`GET /health`. Las respuestas inválidas son 400, los recursos inexistentes 404
-y los SKU o nombres duplicados 409.
-
-### Pruebas y entornos de base de datos
-
-```bash
-npm run test:unit
-npm run test:integration
-```
-
-Las unitarias se ejecutan una vez con Vitest y repositorios falsos, sin PostgreSQL.
-Las de integración crean una base PostgreSQL efímera exclusivamente con
-Testcontainers, aplican las migraciones, usan los repositorios Prisma reales y
-eliminan el contenedor al finalizar. No utilizan `localhost:5433`, `.env` ni los
-datos de desarrollo. Docker Desktop debe estar activo para ejecutarlas localmente.
-
-El workflow `.github/workflows/ci.yml` se ejecuta en `push` y `pull_request` con
-dos jobs independientes, `unit-tests` e `integration-tests`. Ambos usan
-`ubuntu-latest`, Node 22, caché npm, `npm ci` y Prisma Client generado; cada uno
-ejecuta su suite una sola vez. El job de integración no declara un servicio
-PostgreSQL: Testcontainers crea la base temporal dentro del runner.
-
-El bloque 7 está pendiente de publicación porque este checkout todavía no tiene
-remote Git configurado. Consulta [docs/BLOQUE_07.md](docs/BLOQUE_07.md) para el
-estado y las comprobaciones realizadas.
-
 Infraestructura inicial de una API de inventario con NestJS, PostgreSQL y Prisma.
-
-El contenido que sigue conserva notas históricas de los bloques anteriores. Para
-el contrato vigente, toma como referencia esta sección y los documentos
-`docs/BLOQUE_01.md` a `docs/BLOQUE_07.md`; algunos ejemplos antiguos describen
-las etapas de migración antes de la contracción final.
 
 ## Estado actual: bloque 5
 

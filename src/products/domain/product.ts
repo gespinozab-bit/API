@@ -5,6 +5,7 @@ export interface Product {
   description: string | null;
   price: string;
   stock: number;
+  categoryId: number;
   categoryName: string;
   createdAt: Date;
   updatedAt: Date;
@@ -16,5 +17,6 @@ export interface CreateProductData {
   description?: string;
   price: number;
   stock: number;
-  categoryName: string;
+  categoryId?: number;
+  categoryName?: string;
 }

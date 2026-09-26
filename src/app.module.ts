@@ -4,6 +4,7 @@ import * as Joi from 'joi';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProductsModule } from './products/products.module';
     PrismaModule,
     HealthModule,
     ProductsModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {}

@@ -6,6 +6,7 @@ import {
   ProductRepository,
 } from './ports/product.repository';
 import { CreateProductService } from './create-product.service';
+import { CATEGORY_REPOSITORY } from '../../categories/application/ports/category.repository';
 
 describe('CreateProductService', () => {
   let service: CreateProductService;
@@ -21,6 +22,7 @@ describe('CreateProductService', () => {
 
   const product: Product = {
     id: 1,
+    categoryId: 7,
     ...input,
     description: null,
     price: '10.50',
@@ -30,6 +32,8 @@ describe('CreateProductService', () => {
 
   beforeEach(async () => {
     repository = {
+      findAll: jest.fn(),
+      findById: jest.fn(),
       findBySku: jest.fn(),
       create: jest.fn(),
     };
@@ -37,6 +41,10 @@ describe('CreateProductService', () => {
       providers: [
         CreateProductService,
         { provide: PRODUCT_REPOSITORY, useValue: repository },
+        {
+          provide: CATEGORY_REPOSITORY,
+          useValue: { findByName: jest.fn().mockResolvedValue({ id: 7 }) },
+        },
       ],
     }).compile();
     service = module.get(CreateProductService);
@@ -48,7 +56,7 @@ describe('CreateProductService', () => {
 
     await expect(service.execute(input)).resolves.toBe(product);
     expect(repository.findBySku).toHaveBeenCalledWith('TST-001');
-    expect(repository.create).toHaveBeenCalledWith(input);
+    expect(repository.create).toHaveBeenCalledWith({ ...input, categoryId: 7 });
   });
 
   it('rejects a duplicated SKU without creating a product', async () => {
