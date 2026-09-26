@@ -4,15 +4,14 @@
 
 La revisión del bloque 7 encontró que el trabajo técnico de bloques 1 a 6 está
 presente en el checkout: endpoints, migración de stock, pruebas Vitest,
-Testcontainers, workflow de GitHub Actions y documentación por bloque. La
-publicación no puede completarse porque el repositorio local está en la rama
-`main` y no tiene ningún remote configurado. `git ls-remote
-https://github.com/gespinozab-bit/API.git` no devolvió ramas ni etiquetas; por
-tanto no se creó un remote, no se creó un commit y no se hizo push.
+Testcontainers, workflow de GitHub Actions y documentación por bloque. Al inicio
+el checkout no tenía remote; la URL indicada se verificó como repositorio público
+válido y vacío (rama predeterminada `main`), así que se añadió como `origin` y se
+publicó el proyecto.
 
-No se solicitaron tokens ni se mostraron credenciales. El enlace indicado no se
-puede usar como remote verificable desde este checkout sin conocer un remote
-válido y autorizado. Esta es la única condición que detiene el bloque 7.
+No se solicitaron tokens ni se mostraron credenciales. El remote utilizado es
+`https://github.com/gespinozab-bit/API.git`; GitHub confirmó el push normal de
+`main` sin force push.
 
 ## Cambios de este bloque
 
@@ -23,7 +22,7 @@ válido y autorizado. Esta es la única condición que detiene el bloque 7.
   secretos, claves/certificados, respaldos, logs y archivos tsbuildinfo. `.env`,
   `.env.*` y los artefactos existentes ya estaban excluidos; solo las plantillas
   `.env.example` y `.env.verify.example` permanecen permitidas.
-- Este documento registra la validación y el bloqueo de publicación.
+- Este documento registra la validación y la publicación.
 
 Los archivos de documentación histórica no se eliminaron ni se reescribieron.
 Las modificaciones de código y pruebas que aparecen en el working tree son de
@@ -51,22 +50,30 @@ Estado observado antes de esta revisión:
 
 - Rama actual: `main`.
 - Conflictos sin resolver: ninguno.
-- Remote configurado: ninguno (`git remote -v` vacío).
+- Remote configurado: `origin` → `https://github.com/gespinozab-bit/API.git`.
 - Archivos locales sensibles: `.env` y `.env.verify` ignorados; no aparecen en
   `git status` ni en la lista de archivos rastreados.
 
-Cuando el repositorio tenga un remote válido y autorizado, el cierre pendiente
-será:
+El commit publicado es:
 
 ```bash
-git status
-git add .
-git commit -m "feat: add Vitest Testcontainers and GitHub Actions"
-git push origin main
+ab11bc1 feat: add Vitest Testcontainers and GitHub Actions
 ```
 
-No debe usarse `--force`. Después del push, consultar GitHub CLI (`gh run list`
-o `gh run view`) si está instalado y autenticado, y documentar el enlace de la
-ejecución junto con el estado de `unit-tests` e `integration-tests`.
+No se usó `--force`. GitHub CLI no está instalado, por lo que la ejecución se
+consultó mediante la API pública de solo lectura después del push.
+
+## GitHub Actions posterior al push
+
+Ejecución: [Inventory CI #36262620986](https://github.com/gespinozab-bit/API/actions/runs/36262620986).
+
+| Job | Estado | Enlace |
+| --- | --- | --- |
+| Unit tests | `completed / success` | [job 108461204831](https://github.com/gespinozab-bit/API/actions/runs/36262620986/job/108461204831) |
+| Integration tests | `completed / success` | [job 108461204968](https://github.com/gespinozab-bit/API/actions/runs/36262620986/job/108461204968) |
+
+La ejecución corresponde a `main` y al SHA `ab11bc17a9a01c7afb2e83cb275117dc7b76056c`.
+Ambos jobs terminaron correctamente; integración usó Testcontainers y no un
+servicio PostgreSQL declarado en el workflow.
 
 No se creó otro repositorio ni se avanzó al bloque final de evidencias.
