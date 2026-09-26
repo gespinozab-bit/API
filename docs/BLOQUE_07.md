@@ -65,14 +65,14 @@ consultó mediante la API pública de solo lectura después del push.
 
 ## GitHub Actions posterior al push
 
-Ejecución: [Inventory CI #36262620986](https://github.com/gespinozab-bit/API/actions/runs/36262620986).
+Ejecución final: [Inventory CI #36262732736](https://github.com/gespinozab-bit/API/actions/runs/36262732736).
 
 | Job | Estado | Enlace |
 | --- | --- | --- |
-| Unit tests | `completed / success` | [job 108461204831](https://github.com/gespinozab-bit/API/actions/runs/36262620986/job/108461204831) |
-| Integration tests | `completed / success` | [job 108461204968](https://github.com/gespinozab-bit/API/actions/runs/36262620986/job/108461204968) |
+| Unit tests | `completed / success` | [job 108461514666](https://github.com/gespinozab-bit/API/actions/runs/36262732736/job/108461514666) |
+| Integration tests | `completed / success` | [job 108461514502](https://github.com/gespinozab-bit/API/actions/runs/36262732736/job/108461514502) |
 
-La ejecución corresponde a `main` y al SHA `ab11bc17a9a01c7afb2e83cb275117dc7b76056c`.
+La ejecución corresponde a `main` y al SHA `60ffaf1a6e880dbf1d652f6822ee2dd3ce540a70`.
 Ambos jobs terminaron correctamente; integración usó Testcontainers y no un
 servicio PostgreSQL declarado en el workflow.
 
