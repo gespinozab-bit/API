@@ -193,3 +193,11 @@ Las migraciones que hayan sido creadas o aplicadas no se modifican. Cualquier ca
 - 2026-09-20: Etapa CONTRAER completada con `categoryId NOT NULL`, retiro seguro de `Product.categoryName`, persistencia basada sólo en la relación y contrato HTTP preservado. Estrategia completa y Bloque 6 terminado.
 - 2026-09-20: Historial completo reconstruido con `migrate deploy` sobre PostgreSQL temporal vacío; seed idempotente, restricciones y API temporal verificadas, limpieza segura y base principal intacta. Bloque 7 terminado.
 - 2026-09-20: Verificación integral completada con 36 pruebas aprobadas, cobertura registrada, restricciones PostgreSQL y respuestas HTTP comprobadas, reconstrucción aislada repetida y matriz de aceptación documentada. Bloque 8 terminado.
+
+## Evidencia final actualizada
+
+Después de los bloques 1–7 actuales, el estado vigente es: cinco migraciones
+aplicadas, 39 pruebas unitarias aprobadas, 5 pruebas de integración aprobadas con
+Testcontainers, compilación/lint/formato/Prisma correctos y CI remoto exitoso en
+`main`. La evidencia se mantiene en
+[BLOQUE_FINAL_EVIDENCIAS.md](BLOQUE_FINAL_EVIDENCIAS.md).

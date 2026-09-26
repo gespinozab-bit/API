@@ -1,5 +1,11 @@
 # Evidencia de aceptación — Bloque 8
 
+> Este archivo conserva la evidencia histórica del bloque 8 original. El estado
+> final actualizado después de los bloques 1–7 está en
+> [BLOQUE_FINAL_EVIDENCIAS.md](BLOQUE_FINAL_EVIDENCIAS.md). Allí constan las
+> cinco migraciones actuales, 39 pruebas unitarias, 5 de integración, el workflow
+> publicado y la última verificación de GitHub Actions.
+
 Verificación ejecutada el 20 de septiembre de 2026 (America/Guatemala).
 
 ## Entorno

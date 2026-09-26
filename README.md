@@ -50,9 +50,12 @@ dos jobs independientes, `unit-tests` e `integration-tests`. Ambos usan
 ejecuta su suite una sola vez. El job de integración no declara un servicio
 PostgreSQL: Testcontainers crea la base temporal dentro del runner.
 
-El bloque 7 está pendiente de publicación porque este checkout todavía no tiene
-remote Git configurado. Consulta [docs/BLOQUE_07.md](docs/BLOQUE_07.md) para el
-estado y las comprobaciones realizadas.
+El bloque 7 fue publicado en `origin/main`. Consulta
+[docs/BLOQUE_07.md](docs/BLOQUE_07.md) para el estado y las comprobaciones
+realizadas.
+
+La evidencia final actualizada está en
+[docs/BLOQUE_FINAL_EVIDENCIAS.md](docs/BLOQUE_FINAL_EVIDENCIAS.md).
 
 Infraestructura inicial de una API de inventario con NestJS, PostgreSQL y Prisma.
 
